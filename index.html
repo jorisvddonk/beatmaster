@@ -1,5 +1,16 @@
 <html>
-<body>
-  <script src="./index.js"></script>
-</body>
+    <head>
+        <title>Beat Viewer</title>
+        <script src="./index.js"></script>        
+    </head>
+    <body>
+        <a-scene vr-mode-ui="enabled: true" vr-ctrl fetch-utomik-data super-hands>
+            <a-entity id="sky" geometry="primitive: sphere; radius: 100;" material="shader: skyGradient; colorTop: #1e437c; colorBottom: #3173ab; side: back"/>
+            <a-circle color="#335" radius="10" rotation="-90 0 0" position="0 -2 0"></a-circle>
+        
+            <a-entity id="song_title" position="0 2.30 -3.01" geometry="primitive: plane; width: auto; height: auto" material="opacity: 0"
+            text="color: #fff; align: center; value: Loading... Please wait; width: 2.60; opacity: 1; lineHeight: 5;" scale="2 2 2">
+            </a-entity>
+            </a-scene>
+    </body>
 </html>
