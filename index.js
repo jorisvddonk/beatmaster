@@ -36,8 +36,10 @@ var getFileInZip = function(jszip, filename) {
 
 var BOXSIZE = 0.33;
 var OFFSET_Y = 1;
+var OFFSET_Z = -7;
 var RED = '#f00';
 var BLUE = '#00f';
+var infoMetaData = undefined;
 var songMetaData = undefined;
 
 var getPositionForNote = function(note) {
@@ -45,13 +47,14 @@ var getPositionForNote = function(note) {
     return {
         y: (BOXSIZE * note._lineLayer) + OFFSET_Y,
         x: BOXSIZE * note._lineIndex - BOXSIZE * 2,
-        z: -time * BOXSIZE
+        z: (-time + OFFSET_Z) * BOXSIZE
     }
 }
 
 var playing = false;
 
 var displayTrack = function(trackdetails) {
+    console.log(trackdetails)
     var noteElements = trackdetails._notes.map(note => {
         var box = document.createElement('a-box');
         box.setAttribute('position', getPositionForNote(note));
@@ -71,8 +74,11 @@ AFRAME.registerComponent('game-track', {
     },
     tick: function(time, timeDelta) {
         if (playing) {
+            var timedelta_sec = timeDelta / 1000;
+            var move_in_1_minute = ((songMetaData._beatsPerMinute * 4) * BOXSIZE);
+            var move = move_in_1_minute / 60 * timedelta_sec;
             var pos = this.el.getAttribute('position');
-            pos.z += (BOXSIZE * songMetaData.beatsPerMinute)/4/60/4;
+            pos.z += move;
             this.el.setAttribute('position', pos);
         }
     }
@@ -85,13 +91,14 @@ songParser.then(function(jszip){
             var title = `${filejson.songName} - ${filejson.songSubName} (by ${filejson.authorName})`;
             setTitle(title);
             console.log(filejson);
-            songMetaData = filejson;
+            infoMetaData = filejson;
             var trackjsonfilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].jsonPath;
             var audiofilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].audioPath;
             console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
             getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
                 return trackjsonfile.async('text').then(function(filedetails){
                     var trackjson = JSON.parse(filedetails);
+                    songMetaData = trackjson;
                     displayTrack(trackjson);
                 });
             }).catch(showError);
