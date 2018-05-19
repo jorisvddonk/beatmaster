@@ -40,7 +40,6 @@ var BLUE = '#00f';
 var songMetaData = undefined;
 
 var getPositionForNote = function(note) {
-    // TODO: verify that this is correct :)
     var time = note._time * 4;
     return {
         y: BOXSIZE * note._lineLayer,
@@ -49,11 +48,12 @@ var getPositionForNote = function(note) {
     }
 }
 
+var playing = false;
+
 var displayTrack = function(trackdetails) {
     var noteElements = trackdetails._notes.map(note => {
         var box = document.createElement('a-box');
         box.setAttribute('position', getPositionForNote(note));
-        console.log(note)
         box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
         box.setAttribute('material', 'src', '#dir_' + note._cutDirection);
         return box;
@@ -63,6 +63,18 @@ var displayTrack = function(trackdetails) {
         document.getElementById('notes').appendChild(element);
     });
 };
+
+AFRAME.registerComponent('game-track', {
+    init: function() {
+    },
+    tick: function(time, timeDelta) {
+        if (playing) {
+            var pos = this.el.getAttribute('position');
+            pos.z += 0.1;
+            this.el.setAttribute('position', pos);
+        }
+    }
+});
 
 songParser.then(function(jszip){
     getFileInZip(jszip, 'info.json').then(function(file){
@@ -78,6 +90,7 @@ songParser.then(function(jszip){
                 return trackjsonfile.async('text').then(function(filedetails){
                     var trackjson = JSON.parse(filedetails);
                     displayTrack(trackjson);
+                    playing = true;
                 });
             }).catch(showError);
         });
@@ -104,4 +117,4 @@ if (module.hot) {
       window.location.reload();
       throw new Error('Hot Module Reloading not supported!');
     });
-  }
+}
