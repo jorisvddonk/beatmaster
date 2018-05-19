@@ -87,14 +87,28 @@ songParser.then(function(jszip){
             console.log(filejson);
             songMetaData = filejson;
             var trackjsonfilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].jsonPath;
-            console.log("Loading... " + trackjsonfilename);
+            var audiofilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].audioPath;
+            console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
             getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
                 return trackjsonfile.async('text').then(function(filedetails){
                     var trackjson = JSON.parse(filedetails);
                     displayTrack(trackjson);
-                    playing = true;
                 });
             }).catch(showError);
+            getFileInZip(jszip, audiofilename).then(function(audiofile){
+                audiofile.async('base64').then(function(b64data){
+                    var audioElem = document.createElement('audio');
+                    audioElem.setAttribute('id', 'audio');
+                    audioElem.setAttribute('autoplay', true);
+                    var format = audiofilename.toLowerCase().endsWith('mp3') ? 'mp3' : 'ogg';
+                    audioElem.setAttribute('src', `data:audio/${format};base64,${b64data}`);
+                    audioElem.onplay = function() {
+                        playing = true;
+                    };
+                    document.body.appendChild(audioElem);
+                    audioElem.play();
+                }).catch(showError);
+            })
         });
     }).catch(showError);
 }).catch(showError);
