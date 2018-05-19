@@ -52,6 +52,7 @@ var displayTrack = function(trackdetails) {
         box.setAttribute('position', getPositionForNote(note));
         console.log(note)
         box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
+        box.setAttribute('material', 'src', '#dir_' + note._cutDirection);
         return box;
     });
 
