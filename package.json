@@ -1,0 +1,15 @@
+{
+  "name": "beatviewer",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel index.html"
+  },
+  "author": "Joris van de Donk",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel-bundler": "^1.8.1"
+  }
+}
