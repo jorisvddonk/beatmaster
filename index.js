@@ -2,7 +2,14 @@ import JSZip from 'jszip';
 
 require('aframe');
 require('./shaders/skyGradient.js');
-var songURL = require('./data/song.zip');
+var url = require('url');
+var parsedURL = url.parse(document.location.toString(), true);
+var songURL = undefined;
+if (parsedURL.query.songlocation) {
+    songURL = parsedURL.query.songlocation;
+} else {
+    alert("Please specify a song URL via the 'songlocation' query string parameter!");
+};
 
 var songParser = fetch(songURL).then(function(x){return JSZip.loadAsync(x.blob())});
 
