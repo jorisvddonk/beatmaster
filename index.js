@@ -2,8 +2,9 @@ import JSZip from 'jszip';
 
 require('aframe');
 require('./shaders/skyGradient.js');
+var songURL = require('./data/song.zip');
 
-var songParser = fetch('http://127.0.0.1:8081/data/song.zip').then(function(x){return JSZip.loadAsync(x.blob())});
+var songParser = fetch(songURL).then(function(x){return JSZip.loadAsync(x.blob())});
 
 var setTitle = function(title){
     document.getElementById('song_title').setAttribute('text', 'value', title.toString());
