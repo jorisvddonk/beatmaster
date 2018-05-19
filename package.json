@@ -5,7 +5,8 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel index.html"
+    "dev": "parcel index.html",
+    "build": "PARCEL_WORKERS=0 parcel build index.html --out-dir dist --public-url ./ && mv dist/beatviewer.html dist/index.html"
   },
   "author": "Joris van de Donk",
   "license": "MIT",
