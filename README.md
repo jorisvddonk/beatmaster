@@ -2,6 +2,8 @@
 
 t.b.d. what exactly this is going to be.. :)
 
+Demo: http://beatmaster.sarvva.moos.es/?songlocation=https://beatsaver.com/dl.php?id=172
+
 ## Running/developing Beat Master
 
 First of all, make sure you have NodeJS v8.x (or higher) installed and npm v5.x (or higher).
