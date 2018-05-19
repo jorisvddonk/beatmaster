@@ -78,3 +78,25 @@ songParser.then(function(jszip){
         });
     }).catch(showError);
 }).catch(showError);
+
+
+/*
+  Define custom behaviour for Hot Module Replacement
+  A-Frame exposes no API for unregistering components, unfortunately.
+  Therefore, we'll just reload the entire page whenever:
+  * This module is about to be replaced
+  * Any of this module's dependencies were just updated
+  An error is thrown in both functions to prevent this module from getting reloaded in a split-second.
+*/
+if (module.hot) {
+    module.hot.dispose(function() {
+      // module is about to be replaced
+      window.location.reload();
+      throw new Error('Hot Module Reloading not supported!');
+    });
+    module.hot.accept(function() {
+      // module or one of its dependencies was just updated
+      window.location.reload();
+      throw new Error('Hot Module Reloading not supported!');
+    });
+  }
