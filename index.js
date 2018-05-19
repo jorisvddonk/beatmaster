@@ -34,7 +34,8 @@ var getFileInZip = function(jszip, filename) {
     });
 };
 
-var BOXSIZE = 1;
+var BOXSIZE = 0.33;
+var OFFSET_Y = 1;
 var RED = '#f00';
 var BLUE = '#00f';
 var songMetaData = undefined;
@@ -42,7 +43,7 @@ var songMetaData = undefined;
 var getPositionForNote = function(note) {
     var time = note._time * 4;
     return {
-        y: BOXSIZE * note._lineLayer,
+        y: (BOXSIZE * note._lineLayer) + OFFSET_Y,
         x: BOXSIZE * note._lineIndex - BOXSIZE * 2,
         z: -time * BOXSIZE
     }
@@ -54,6 +55,7 @@ var displayTrack = function(trackdetails) {
     var noteElements = trackdetails._notes.map(note => {
         var box = document.createElement('a-box');
         box.setAttribute('position', getPositionForNote(note));
+        box.setAttribute('scale', `${BOXSIZE} ${BOXSIZE} ${BOXSIZE}`);
         box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
         box.setAttribute('material', 'src', '#dir_' + note._cutDirection);
         return box;
@@ -70,7 +72,7 @@ AFRAME.registerComponent('game-track', {
     tick: function(time, timeDelta) {
         if (playing) {
             var pos = this.el.getAttribute('position');
-            pos.z += 0.1;
+            pos.z += (BOXSIZE * songMetaData.beatsPerMinute)/4/60/4;
             this.el.setAttribute('position', pos);
         }
     }
