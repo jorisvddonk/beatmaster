@@ -27,8 +27,30 @@ var getFileInZip = function(jszip, filename) {
     });
 };
 
+var BOXSIZE = 1;
+var RED = '#f00';
+var BLUE = '#00f';
+var getPositionForNote = function(note) {
+    // TODO: verify that this is correct :)
+    return {
+        y: BOXSIZE * note._lineLayer,
+        x: BOXSIZE * note._lineIndex - BOXSIZE * 2,
+        z: -note._time
+    }
+}
+
 var displayTrack = function(trackdetails) {
-    console.log(trackdetails); //todo
+    var noteElements = trackdetails._notes.map(note => {
+        var box = document.createElement('a-box');
+        box.setAttribute('position', getPositionForNote(note));
+        console.log(note)
+        box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
+        return box;
+    });
+
+    noteElements.forEach(element => {
+        document.getElementById('notes').appendChild(element);
+    });
 };
 
 songParser.then(function(jszip){
