@@ -37,12 +37,15 @@ var getFileInZip = function(jszip, filename) {
 var BOXSIZE = 1;
 var RED = '#f00';
 var BLUE = '#00f';
+var songMetaData = undefined;
+
 var getPositionForNote = function(note) {
     // TODO: verify that this is correct :)
+    var time = note._time * 4;
     return {
         y: BOXSIZE * note._lineLayer,
         x: BOXSIZE * note._lineIndex - BOXSIZE * 2,
-        z: -note._time
+        z: -time * BOXSIZE
     }
 }
 
@@ -67,7 +70,8 @@ songParser.then(function(jszip){
             var filejson = JSON.parse(filedetails);
             var title = `${filejson.songName} - ${filejson.songSubName} (by ${filejson.authorName})`;
             setTitle(title);
-            console.log(filejson)
+            console.log(filejson);
+            songMetaData = filejson;
             var trackjsonfilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].jsonPath;
             console.log("Loading... " + trackjsonfilename);
             getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
