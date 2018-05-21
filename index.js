@@ -1,7 +1,10 @@
 import JSZip from 'jszip';
+import Vue from 'vue';
 
 require('aframe');
 require('./shaders/skyGradient.js');
+var trackAnalytics = require('./track-analytics.js');
+
 var url = require('url');
 var parsedURL = url.parse(document.location.toString(), true);
 var songURL = undefined;
@@ -66,7 +69,6 @@ var BOXROTATIONS = {
     8: 0 // no direction
 }
 var displayTrack = function(trackdetails) {
-    console.log(trackdetails)
     var noteElements = trackdetails._notes.map(note => {
         var box = document.createElement('a-box');
         box.setAttribute('position', getPositionForNote(note));
@@ -112,39 +114,54 @@ AFRAME.registerComponent('remove-hand-controls', {
 });
 
 songParser.then(function(jszip){
-    getFileInZip(jszip, 'info.json').then(function(file){
+    return getFileInZip(jszip, 'info.json').then(function(file){
         return file.async('text').then(function(filedetails){
             var filejson = JSON.parse(filedetails);
             var title = `${filejson.songName} - ${filejson.songSubName} (by ${filejson.authorName})`;
             setTitle(title);
-            console.log(filejson);
             infoMetaData = filejson;
             var trackjsonfilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].jsonPath;
             var audiofilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].audioPath;
             console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
-            getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
+            var getTrackDetails = getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
                 return trackjsonfile.async('text').then(function(filedetails){
                     var trackjson = JSON.parse(filedetails);
                     songMetaData = trackjson;
                     displayTrack(trackjson);
+                    return trackjson;
                 });
             }).catch(showError);
-            getFileInZip(jszip, audiofilename).then(function(audiofile){
-                audiofile.async('base64').then(function(b64data){
+            var getAudio = getFileInZip(jszip, audiofilename).then(function(audiofile){
+                return audiofile.async('base64').then(function(b64data){
                     var audioElem = document.createElement('audio');
                     audioElem.setAttribute('id', 'audio');
-                    audioElem.setAttribute('autoplay', true);
                     var format = audiofilename.toLowerCase().endsWith('mp3') ? 'mp3' : 'ogg';
                     audioElem.setAttribute('src', `data:audio/${format};base64,${b64data}`);
                     audioElem.onplay = function() {
                         playing = true;
                     };
                     document.body.appendChild(audioElem);
-                    audioElem.play();
+                    return audioElem;
                 }).catch(showError);
-            })
+            });
+            return Promise.all([getTrackDetails, getAudio]).then(function(results){
+                return {
+                    track_info: filejson,
+                    track_data: results[0],
+                    audioElement: results[1]
+                }
+            });
         });
     }).catch(showError);
+}).then(function(data){
+    console.log(data);
+    data.audioElement.play();
+    var analytics = trackAnalytics(data.track_info, data.track_data);
+    var app = new Vue({
+        el: '#stats',
+        data: analytics
+    });
+    document.getElementById('stats').style.display = ''; // show element
 }).catch(showError);
 
 
