@@ -8,6 +8,7 @@
         "node_modules": true,
         ".cache": true,
         "dist": true,
-        "data": true
+        "data": true,
+        "temp": true
     }
 }
