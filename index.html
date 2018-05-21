@@ -15,7 +15,8 @@
             <div>number of bombs: <em>{{number_bombs}}</em></div>
             <div>number of obstacles: <em>{{number_obstacles}}</em></div>
             <div>number of events: <em>{{number_events}}</em></div>
-            <div>longest gap between notes: <em>{{longest_gap | float}} sec</em></div>
+            <div>longest gap between notes: <em>{{longest_gap | float}} beats ({{longest_gap_sec | float}} sec)</em></div>
+            <div>shortest gap between notes: <em>{{shortest_gap | float}} beats ({{shortest_gap_sec | float}} sec)</em></div>
             <div>notes heatmap:</div>
             <div id="notes_heatmap"></div>
         </div>

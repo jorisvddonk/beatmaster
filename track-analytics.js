@@ -7,15 +7,26 @@ module.exports = function(track_info, track_data) {
         }
         return 0;
     });
+    var tempNotes = ordered_notes.map(function(note){return note._time});
+    var gaps = [];
+    for (var i = 1; i < tempNotes.length; i++) {
+        gaps.push(tempNotes[i] - tempNotes[i-1]);
+    }
+    gaps.sort(function(a,b){return a > b});
+
+    var convertBeatsToSeconds = function(beats) {
+        return beats * (60 / track_data._beatsPerMinute);
+    };
     var getLongestGap = function() {
-        var gap = 0; // time in beats
-        for (var i = 1; i < ordered_notes.length; i++) {
-            var thisGap = ordered_notes[i]._time - ordered_notes[i-1]._time;
-            if (thisGap > gap) {
-                gap = thisGap;
+        return gaps[gaps.length-1];
+    };
+    var getShortestGap = function() { // shortest non-0 gap
+        return gaps.reduce(function(memo, gap) {
+            if (gap > 0 && memo === 0) {
+                return gap;
             }
-        }
-        return gap * (60 / track_data._beatsPerMinute);
+            return memo;
+        }, 0);
     };
 
     var getNumberOfBombs = function() {
@@ -48,6 +59,9 @@ module.exports = function(track_info, track_data) {
         track_info: track_info,
         track_data: track_data,
         longest_gap: getLongestGap(),
+        shortest_gap: getShortestGap(),
+        longest_gap_sec: convertBeatsToSeconds(getLongestGap()),
+        shortest_gap_sec: convertBeatsToSeconds(getShortestGap()),
         number_notes: getNumberOfNotes(),
         number_bombs: getNumberOfBombs(),
         number_obstacles: getNumberOfObstacles(),
