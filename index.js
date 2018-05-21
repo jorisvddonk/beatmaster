@@ -3,6 +3,7 @@ import Vue from 'vue';
 
 require('aframe');
 require('./shaders/skyGradient.js');
+var trackVisualization = require('./track-visualization.js');
 var trackAnalytics = require('./track-analytics.js');
 
 var url = require('url');
@@ -166,6 +167,7 @@ songParser.then(function(jszip){
             }
         }
     });
+    trackVisualization(data);
     document.getElementById('stats').style.display = ''; // show element
 }).catch(showError);
 
