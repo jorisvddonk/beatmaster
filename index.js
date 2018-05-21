@@ -10,11 +10,15 @@ var trackAnalytics = require('./track-analytics.js');
 var url = require('url');
 var parsedURL = url.parse(document.location.toString(), true);
 var songURL = undefined;
+var songDifficulty = undefined;
 if (parsedURL.query.songlocation) {
     songURL = parsedURL.query.songlocation;
 } else {
     alert("Please specify a song URL via the 'songlocation' query string parameter!");
-};
+}
+if (parsedURL.query.difficulty) {
+    songDifficulty = parsedURL.query.difficulty;
+}
 
 var songParser = fetch(songURL).then(function(x){return JSZip.loadAsync(x.blob())});
 
@@ -123,8 +127,20 @@ songParser.then(function(jszip){
             var title = `${filejson.songName} - ${filejson.songSubName} (by ${filejson.authorName})`;
             setTitle(title);
             infoMetaData = filejson;
-            var trackjsonfilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].jsonPath;
-            var audiofilename = filejson.difficultyLevels[filejson.difficultyLevels.length-1].audioPath;
+            var selectedDifficulty;
+            if (songDifficulty) {
+                selectedDifficulty = filejson.difficultyLevels.find(function(difficulty){
+                    return difficulty.difficulty.toLowerCase() === songDifficulty.toLowerCase();
+                })
+            } else {
+                selectedDifficulty = filejson.difficultyLevels[filejson.difficultyLevels.length-1];
+                songDifficulty = selectedDifficulty.difficulty;
+            }
+            if (!selectedDifficulty) {
+                throw new Error("Could not find difficulty " + songDifficulty + "!");                
+            }
+            var trackjsonfilename = selectedDifficulty.jsonPath;
+            var audiofilename = selectedDifficulty.audioPath;
             console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
             var getTrackDetails = getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
                 return trackjsonfile.async('text').then(function(filedetails){
@@ -156,13 +172,14 @@ songParser.then(function(jszip){
                 }
             });
         });
-    }).catch(showError);
+    })
 }).then(function(data){
     console.log(data);
     data.audioElement.play();
     var analytics = trackAnalytics(data.track_info, data.track_data);
     var appdata = Object.assign({
-        expandStats: true
+        expandStats: true,
+        songDifficulty: songDifficulty
     }, analytics);
     var app = new Vue({
         el: '#stats',
