@@ -2,7 +2,7 @@
 
 t.b.d. what exactly this is going to be.. :)
 
-Demo: http://beatmaster.sarvva.moos.es/?songlocation=https://beatsaver.com/dl.php?id=172
+Demo: http://beatmaster.sarvva.moos.es/?songlocation=https://beatsaver.com/dl.php?id=542&difficulty=normal
 
 ## Running/developing Beat Master
 
