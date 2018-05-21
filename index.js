@@ -34,7 +34,8 @@ var getFileInZip = function(jszip, filename) {
     });
 };
 
-var BOXSIZE = 0.33;
+var CELLSIZE = 0.33; // size of the cell surrounding a box
+var BOXSIZE = 0.25; // size of the box itself
 var OFFSET_Y = 1;
 var OFFSET_Z = -7;
 var RED = '#f00';
@@ -45,14 +46,25 @@ var songMetaData = undefined;
 var getPositionForNote = function(note) {
     var time = note._time * 4;
     return {
-        y: (BOXSIZE * note._lineLayer) + OFFSET_Y,
-        x: BOXSIZE * note._lineIndex - BOXSIZE * 2,
-        z: (-time + OFFSET_Z) * BOXSIZE
+        y: (CELLSIZE * note._lineLayer) + OFFSET_Y,
+        x: CELLSIZE * note._lineIndex - CELLSIZE * 2,
+        z: (-time + OFFSET_Z) * CELLSIZE
     }
 }
 
 var playing = false;
 
+var BOXROTATIONS = {
+    0: 0, // up
+    1: 180, // down
+    2: 90, // left
+    3: -90, // right
+    4: 45, // up left
+    5: -45, // up right
+    6: 180 - 45, // down left
+    7: 180 + 45, // down right
+    8: 0 // no direction
+}
 var displayTrack = function(trackdetails) {
     console.log(trackdetails)
     var noteElements = trackdetails._notes.map(note => {
@@ -60,7 +72,10 @@ var displayTrack = function(trackdetails) {
         box.setAttribute('position', getPositionForNote(note));
         box.setAttribute('scale', `${BOXSIZE} ${BOXSIZE} ${BOXSIZE}`);
         box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
-        box.setAttribute('material', 'src', '#dir_' + note._cutDirection);
+        if (note._cutDirection != 8) {
+            box.setAttribute('material', 'src', '#dir_0');
+        }
+        box.setAttribute('rotation', '0 0 ' + BOXROTATIONS[note._cutDirection]);
         return box;
     });
 
@@ -75,7 +90,7 @@ AFRAME.registerComponent('game-track', {
     tick: function(time, timeDelta) {
         if (playing) {
             var timedelta_sec = timeDelta / 1000;
-            var move_in_1_minute = ((songMetaData._beatsPerMinute * 4) * BOXSIZE);
+            var move_in_1_minute = ((songMetaData._beatsPerMinute * 4) * CELLSIZE);
             var move = move_in_1_minute / 60 * timedelta_sec;
             var pos = this.el.getAttribute('position');
             pos.z += move;
