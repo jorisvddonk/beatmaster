@@ -2,6 +2,15 @@ import * as d3 from "d3";
 module.exports = function(data) {
   var cellsize = 20;
 
+  var ordered_notes = data.track_data._notes.sort(function(a,b){
+    if (a._time < b._time) {
+        return -1;
+    } else if (a._time > b._time) {
+        return 1;
+    }
+    return 0;
+  });
+
   var notes_heatmapdata = data.track_data._notes
     .map(function(note) {
       return {
@@ -57,13 +66,35 @@ module.exports = function(data) {
       };
     });
 
+  var TIMES_STACKED_CELLS = 4;
+  var DIV = data.track_data._beatsPerBar / TIMES_STACKED_CELLS;
+  var notetimes_heatmapdata = Array.apply(null, Array(Math.ceil(ordered_notes[ordered_notes.length-1]._time/DIV))).map(function(x){return 0;});
+  ordered_notes.forEach(function(note){
+    notetimes_heatmapdata[Math.floor(note._time/DIV)] += 1;
+  });
+  var getPosition = function(index) {
+    return {
+      horizontal: Math.floor(index / TIMES_STACKED_CELLS),
+      vertical: Math.floor(index % TIMES_STACKED_CELLS),
+    }
+  }
+  notetimes_heatmapdata = notetimes_heatmapdata.map(function(value, index){
+    var retval = getPosition(index);
+    retval.value = value;
+    return retval;
+  });
+
   var renderChart = function(id, data, width, height) {
     var svg = d3
     .select(id)
     .append("svg")
-    .attr("width", cellsize * width)
-    .attr("height", cellsize * height)
-    .append("g");
+    if (width) {
+      svg.attr("width", cellsize * width);
+    }
+    if (height) {
+      svg.attr("height", cellsize * height);
+    }
+    svg.append("g");
 
   var colorScale = d3.scaleLinear().domain([1,data.reduce(function(memo, x){return (x.value > memo ? x.value : memo)}, 0)])
   .interpolate(d3.interpolateRgb)
@@ -89,4 +120,5 @@ module.exports = function(data) {
 
   renderChart('#notes_heatmap', notes_heatmapdata, 4, 3);
   renderChart('#notedirections_heatmap', notedirection_heatmapdata, 3, 3);
+  renderChart('#notetimes_heatmap', notetimes_heatmapdata, undefined, TIMES_STACKED_CELLS);
 };
