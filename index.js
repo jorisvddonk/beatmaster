@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import Vue from 'vue';
+import FileSaver from 'file-saver';
 
 require('aframe');
 require('./shaders/skyGradient.js');
@@ -26,6 +27,7 @@ var showError = function(err){
 };
 
 var getFileInZip = function(jszip, filename) {
+    window.jsz = jszip
     return new Promise(function(resolve, reject){
         for (var i in jszip.files) {
             var file = jszip.files[i];
@@ -149,7 +151,8 @@ songParser.then(function(jszip){
                 return {
                     track_info: filejson,
                     track_data: results[0],
-                    audioElement: results[1]
+                    audioElement: results[1],
+                    zip: jszip
                 }
             });
         });
@@ -164,6 +167,14 @@ songParser.then(function(jszip){
         filters: {
             float: function(i){
                 return i.toFixed(2);
+            }
+        },
+        methods: {
+            download: function(){
+                data.zip.generateAsync({type:"blob"}).then(function (blob) {
+                    var filename = songURL.split('/').pop();
+                    FileSaver.saveAs(blob, filename);
+                });
             }
         }
     });

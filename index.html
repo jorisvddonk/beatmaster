@@ -11,6 +11,7 @@
             <div>author: <em>{{track_info.authorName}}</em></div>
             <div>beats per minute: <em>{{track_data._beatsPerMinute}}</em></div>
             <div>beats per bar: <em>{{track_data._beatsPerBar}}</em></div>
+            <button v-on:click="download()">Download</button>
             <br/>
             <div>number of notes: <em>{{number_notes}}</em></div>
             <div>number of bombs: <em>{{number_bombs}}</em></div>
