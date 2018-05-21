@@ -159,7 +159,12 @@ songParser.then(function(jszip){
     var analytics = trackAnalytics(data.track_info, data.track_data);
     var app = new Vue({
         el: '#stats',
-        data: analytics
+        data: analytics,
+        filters: {
+            float: function(i){
+                return i.toFixed(2);
+            }
+        }
     });
     document.getElementById('stats').style.display = ''; // show element
 }).catch(showError);
