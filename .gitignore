@@ -1,4 +1,4 @@
 node_modules
 .cache/
-data/song.zip
+data/*.zip
 dist/*.map
