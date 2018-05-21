@@ -1,24 +1,12 @@
 import * as d3 from "d3";
 module.exports = function(data) {
   var cellsize = 20;
-  var width = cellsize * 4;
-  var height = cellsize * 3;
-  var colors = [
-    "#f7fcf5",
-    "#e5f5e0",
-    "#c7e9c0",
-    "#a1d99b",
-    "#74c476",
-    "#41ab5d",
-    "#238b45",
-    "#005a32"
-  ];
 
   var notes_heatmapdata = data.track_data._notes
     .map(function(note) {
       return {
         horizontal: note._lineIndex, // 0 to 3, start from left
-        vertical: note._lineLayer // 0 to 2, start from bottom
+        vertical: 2 - note._lineLayer // 0 to 2, start from bottom
       };
     })
     .reduce(
@@ -36,22 +24,52 @@ module.exports = function(data) {
         value: v
       };
     });
+    
+    //Note cut direction (0 = up, 1 = down, 2 = left, 3 = right, 4 = up left, 5 = up right, 6 = down left, 7 = down right, 8 = no direction)
+    var cutDirPositionsInHeatmap = [
+      {horizontal: 1, vertical: 0},
+      {horizontal: 1, vertical: 2},
+      {horizontal: 0, vertical: 1},
+      {horizontal: 2, vertical: 1},
+      {horizontal: 0, vertical: 0},
+      {horizontal: 2, vertical: 0},
+      {horizontal: 0, vertical: 2},
+      {horizontal: 2, vertical: 2},
+      {horizontal: 1, vertical: 1}
+    ];
+    var notedirection_heatmapdata = data.track_data._notes
+    .map(function(note) {
+      return cutDirPositionsInHeatmap[note._cutDirection];
+    })
+    .reduce(
+      function(memo, val) {
+        var index = val.vertical * 3 + val.horizontal;
+        memo[index] = memo[index] + 1;
+        return memo;
+      },
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    )
+    .map(function(v, i) {
+      return {
+        horizontal: i % 3,
+        vertical: Math.floor(i / 3),
+        value: v
+      };
+    });
 
-  var svg = d3
-    .select("#notes_heatmap")
+  var renderChart = function(id, data, width, height) {
+    var svg = d3
+    .select(id)
     .append("svg")
-    .attr("width", width)
-    .attr("height", height)
+    .attr("width", cellsize * width)
+    .attr("height", cellsize * height)
     .append("g");
 
-  var colorScale = d3.scaleLinear().domain([1,notes_heatmapdata.reduce(function(memo, x){return (x.value > memo ? x.value : memo)}, 0)])
+  var colorScale = d3.scaleLinear().domain([1,data.reduce(function(memo, x){return (x.value > memo ? x.value : memo)}, 0)])
   .interpolate(d3.interpolateRgb)
   .range([d3.rgb("#f7fbff"), d3.rgb('#08306b')]);
 
-  var cells = svg.selectAll(".cell").data(notes_heatmapdata);
-
-  cells.append("title");
-
+  var cells = svg.selectAll(".cell").data(data);
   cells
     .enter()
     .append("rect")
@@ -66,6 +84,9 @@ module.exports = function(data) {
     .style("fill", function(d) {
       return colorScale(d.value);
     }).append('title').text(function(d){return d.value + ' notes'});
-
   cells.exit().remove();
+  }
+
+  renderChart('#notes_heatmap', notes_heatmapdata, 4, 3);
+  renderChart('#notedirections_heatmap', notedirection_heatmapdata, 3, 3);
 };
