@@ -161,9 +161,12 @@ songParser.then(function(jszip){
     console.log(data);
     data.audioElement.play();
     var analytics = trackAnalytics(data.track_info, data.track_data);
+    var appdata = Object.assign({
+        expandStats: true
+    }, analytics);
     var app = new Vue({
         el: '#stats',
-        data: analytics,
+        data: appdata,
         filters: {
             float: function(i){
                 return i.toFixed(2);
@@ -175,6 +178,9 @@ songParser.then(function(jszip){
                     var filename = songURL.split('/').pop();
                     FileSaver.saveAs(blob, filename);
                 });
+            },
+            toggleExpandStats: function() {
+                this.expandStats = !this.expandStats;
             }
         }
     });
