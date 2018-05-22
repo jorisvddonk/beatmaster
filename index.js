@@ -272,7 +272,7 @@ AFRAME.registerComponent('gaze-tracker', {
             lastFocusForController.set(getController(evt), evt.target);
             this.setAttribute('material', 'color', COLORS[0]);
         });
-        this.el.addEventListener('mouseleave', function (evt) {
+        this.el.addEventListener('mouseout', function (evt) {
             lastFocusForController.delete(getController(evt));
             this.setAttribute('material', 'color', COLORS[1]);
         });
