@@ -20,8 +20,10 @@
                 <div>number of events: <em>{{number_events}}</em></div>
                 <div>longest gap between notes: <em>{{longest_gap | float}} beats ({{longest_gap_sec | float}} sec)</em></div>
                 <div>shortest gap between notes: <em>{{shortest_gap | float}} beats ({{shortest_gap_sec | float}} sec)</em></div>
-                <div>note locations heatmap:</div>
-                <div id="notes_heatmap"></div>
+                <div>note locations heatmaps (all, red, blue):</div>
+                <span id="notes_heatmap"></span>
+                <span id="notes_heatmap_red"></span>
+                <span id="notes_heatmap_blue"></span>
                 <div>note directions heatmap:</div>
                 <div id="notedirections_heatmap"></div>
                 <div>notes over time heatmap:<br/>(every cell = 1/4th of a bar of {{track_data._beatsPerBar}} beats, every vertical line = 1 bar)<br/>(read from top to bottom, left to right)</div>

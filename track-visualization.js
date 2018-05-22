@@ -11,7 +11,11 @@ module.exports = function(data) {
     return 0;
   });
 
-  var notes_heatmapdata = data.track_data._notes
+  var genLocationsHeatmapData = function(filter) {
+    if (!filter) {
+      filter = function(){return true;};
+    }
+    return data.track_data._notes.filter(filter)
     .map(function(note) {
       return {
         horizontal: note._lineIndex, // 0 to 3, start from left
@@ -33,6 +37,11 @@ module.exports = function(data) {
         value: v
       };
     });
+  }
+
+  var notes_heatmapdata = genLocationsHeatmapData();
+  var notes_heatmapdata_red = genLocationsHeatmapData(function(x){return x._type == 0});
+  var notes_heatmapdata_blue = genLocationsHeatmapData(function(x){return x._type == 1});
     
     //Note cut direction (0 = up, 1 = down, 2 = left, 3 = right, 4 = up left, 5 = up right, 6 = down left, 7 = down right, 8 = no direction)
     var cutDirPositionsInHeatmap = [
@@ -84,7 +93,13 @@ module.exports = function(data) {
     return retval;
   });
 
-  var renderChart = function(id, data, width, height) {
+  var renderChart = function(id, data, width, height, colorFrom, colorTo) {
+    if (!colorFrom) {
+      colorFrom = '#f7fbf7';
+    }
+    if (!colorTo) {
+      colorTo = '#083008';
+    }
     var svg = d3
     .select(id)
     .append("svg")
@@ -98,7 +113,7 @@ module.exports = function(data) {
 
   var colorScale = d3.scaleLinear().domain([1,data.reduce(function(memo, x){return (x.value > memo ? x.value : memo)}, 0)])
   .interpolate(d3.interpolateRgb)
-  .range([d3.rgb("#f7fbff"), d3.rgb('#08306b')]);
+  .range([d3.rgb(colorFrom), d3.rgb(colorTo)]);
 
   var cells = svg.selectAll(".cell").data(data);
   cells
@@ -119,6 +134,8 @@ module.exports = function(data) {
   }
 
   renderChart('#notes_heatmap', notes_heatmapdata, 4, 3);
+  renderChart('#notes_heatmap_red', notes_heatmapdata_red, 4, 3, '#f7fbf7', '#900808');
+  renderChart('#notes_heatmap_blue', notes_heatmapdata_blue, 4, 3, '#f7fbf7', '#080890');
   renderChart('#notedirections_heatmap', notedirection_heatmapdata, 3, 3);
   renderChart('#notetimes_heatmap', notetimes_heatmapdata, undefined, TIMES_STACKED_CELLS);
 };
