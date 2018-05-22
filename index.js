@@ -38,14 +38,16 @@ var songParser = getSongURL().catch(function(e){
             var ss = document.getElementById('select_song');
             data.forEach(function(song, i) {
                 var elem = document.createElement('a-entity');
+                var text = document.createElement('a-entity');
                 elem.setAttribute('gaze-tracker', '');
                 elem.setAttribute('class', 'interactable');
-                elem.setAttribute('text', 'color', '#fff');
-                elem.setAttribute('text', 'align', 'center');
+                elem.appendChild(text);
+                text.setAttribute('text', 'color', '#fff');
+                text.setAttribute('text', 'align', 'center');
                 var title = new DOMParser().parseFromString(song.beatname, 'text/html').documentElement.textContent;
-                elem.setAttribute('text', 'value', title);
-                elem.setAttribute('text', 'opacity', '1');
-                elem.setAttribute('text', 'lineHeight', '40');
+                text.setAttribute('text', 'value', title);
+                text.setAttribute('text', 'opacity', '1');
+                text.setAttribute('text', 'lineHeight', '40');
                 elem.setAttribute('position', {x: 0, y: i * 0.1, z: 0.0});
                 elem.setAttribute('geometry', {primitive: 'plane', width: 1.0, height: 0.09})
                 elem.setAttribute('material', {opacity: 0.5})
