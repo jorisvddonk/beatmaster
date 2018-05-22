@@ -11,16 +11,24 @@ var url = require('url');
 var parsedURL = url.parse(document.location.toString(), true);
 var songURL = undefined;
 var songDifficulty = undefined;
-if (parsedURL.query.songlocation) {
-    songURL = parsedURL.query.songlocation;
-} else {
-    alert("Please specify a song URL via the 'songlocation' query string parameter!");
-}
 if (parsedURL.query.difficulty) {
     songDifficulty = parsedURL.query.difficulty;
 }
 
-var songParser = fetch(songURL).then(function(x){return JSZip.loadAsync(x.blob())});
+var getSongURL = function() {
+    return new Promise(function(resolve, reject) {
+        setTimeout(function(){ // TODO: get rid of this and call getSongURL() after DOMReady
+            if (parsedURL.query.songlocation) {
+                songURL = parsedURL.query.songlocation;
+                resolve(songURL);
+            } else {
+                reject("Please specify a song URL via the 'songlocation' query string parameter!");
+            }
+        });
+    });
+};
+
+var songParser = getSongURL().then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
 
 var setTitle = function(title){
     document.getElementById('song_title').setAttribute('text', 'value', title.toString());
