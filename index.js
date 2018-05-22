@@ -32,12 +32,30 @@ var getSongURL = function() {
 var songParser = getSongURL().catch(function(e){
     return new Promise(function(resolve, reject){
         beatSaverAPI().then(function(data){
-            resolve(`https://beatsaver.com/dl.php?id=${data[0].id}`);
+            document.getElementById('song_title').setAttribute('visible', false);
+            var ss = document.getElementById('select_song');
+            data.forEach(function(song, i) {
+                var elem = document.createElement('a-entity');
+                elem.setAttribute('text', 'color', '#fff');
+                elem.setAttribute('text', 'align', 'center');
+                elem.setAttribute('text', 'value', song.beatname);
+                elem.setAttribute('text', 'width', '2.60');
+                elem.setAttribute('text', 'opacity', '1');
+                elem.setAttribute('text', 'lineHeight', '5');
+                elem.setAttribute('position', {x: 0, y: i * 0.1, z: 0})
+                elem.setAttribute('scale', {x: 1, y: 1, z: 1})
+                ss.appendChild(elem);
+            });
+            
+            ss.setAttribute('visible', true);
+
+            //resolve(`https://beatsaver.com/dl.php?id=${data[0].id}`);
         }).catch(function(e){reject(e)});
     });
 }).then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
 
 var setTitle = function(title){
+    document.getElementById('song_title').setAttribute('visible', true);
     document.getElementById('song_title').setAttribute('text', 'value', title.toString());
 };
 var showError = function(err){
