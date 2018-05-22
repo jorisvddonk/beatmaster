@@ -202,6 +202,9 @@ songParser.then(function(jszip){
                     audioElem.onplay = function() {
                         playing = true;
                     };
+                    audioElem.onpause = function() {
+                        playing = false;
+                    };
                     document.body.appendChild(audioElem);
                     return audioElem;
                 }).catch(showError);
@@ -241,6 +244,13 @@ songParser.then(function(jszip){
             },
             toggleExpandStats: function() {
                 this.expandStats = !this.expandStats;
+            },
+            playPause: function() {
+                if (data.audioElement.paused) {
+                    data.audioElement.play();
+                } else {
+                    data.audioElement.pause();
+                }
             }
         }
     });
