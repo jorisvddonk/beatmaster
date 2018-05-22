@@ -38,14 +38,17 @@ var songParser = getSongURL().catch(function(e){
                 var elem = document.createElement('a-entity');
                 elem.setAttribute('text', 'color', '#fff');
                 elem.setAttribute('text', 'align', 'center');
-                elem.setAttribute('text', 'value', song.beatname);
-                elem.setAttribute('text', 'width', '2.60');
+                var p = new DOMParser()
+                var title = p.parseFromString(song.beatname, 'text/html').documentElement.textContent;
+                elem.setAttribute('text', 'value', title);
                 elem.setAttribute('text', 'opacity', '1');
-                elem.setAttribute('text', 'lineHeight', '5');
-                elem.setAttribute('position', {x: 0, y: i * 0.1, z: 0})
-                elem.setAttribute('scale', {x: 1, y: 1, z: 1})
+                elem.setAttribute('text', 'lineHeight', '40');
+                elem.setAttribute('position', {x: 0, y: i * 0.1, z: 0.0});
+                elem.setAttribute('geometry', {primitive: 'plane', width: 1.0, height: 0.09})
+                elem.setAttribute('material', {opacity: 0.5})
                 ss.appendChild(elem);
             });
+            
             
             ss.setAttribute('visible', true);
 
