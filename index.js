@@ -12,10 +12,6 @@ var trackAnalytics = require('./track-analytics.js');
 var url = require('url');
 var parsedURL = url.parse(document.location.toString(), true);
 var songURL = undefined;
-var songDifficulty = undefined;
-if (parsedURL.query.difficulty) {
-    songDifficulty = parsedURL.query.difficulty;
-}
 
 var getSongURL = function() {
     return new Promise(function(resolve, reject) {
@@ -30,11 +26,30 @@ var getSongURL = function() {
     });
 };
 
+var setStage = function(stageName) {
+    var st = document.getElementById('title');
+    var ss = document.getElementById('select_song');
+    var sd = document.getElementById('select_difficulty');
+
+    if (stageName === 'play' || stageName === 'none') {
+        ss.setAttribute('visible', false);
+        sd.setAttribute('visible', false);
+        setTitle('');
+    } else if (stageName === 'selectSong') {
+        ss.setAttribute('visible', true);
+        sd.setAttribute('visible', false);
+        setTitle('Select a song');
+    } else if (stageName === 'selectDifficulty') {
+        ss.setAttribute('visible', false);
+        sd.setAttribute('visible', true);
+        setTitle('Select a difficulty');
+    }
+}
+
 var songParser = getSongURL().catch(function(e){
     return new Promise(function(resolve, reject){
         beatSaverAPI().then(function(data){
-            var st = document.getElementById('song_title');
-            st.setAttribute('visible', false);
+            setStage('selectSong');
             var ss = document.getElementById('select_song');
             data.forEach(function(song, i) {
                 var elem = document.createElement('a-entity');
@@ -53,19 +68,17 @@ var songParser = getSongURL().catch(function(e){
                 elem.setAttribute('material', {opacity: 0.5})
                 elem.addEventListener('select', function(){
                     resolve(`https://beatsaver.com/dl.php?id=${song.id}`);
-                    ss.setAttribute('visible', false);
-                    st.setAttribute('visible', true);
+                    setStage('none');
                 });
                 ss.appendChild(elem);
             });
-            ss.setAttribute('visible', true);
         }).catch(function(e){reject(e)});
     });
 }).then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
 
 var setTitle = function(title){
-    document.getElementById('song_title').setAttribute('visible', true);
-    document.getElementById('song_title').setAttribute('text', 'value', title.toString());
+    document.getElementById('title').setAttribute('visible', true);
+    document.getElementById('title').setAttribute('text', 'value', title.toString());
 };
 var showError = function(err){
     console.error(err);
@@ -73,7 +86,6 @@ var showError = function(err){
 };
 
 var getFileInZip = function(jszip, filename) {
-    window.jsz = jszip
     return new Promise(function(resolve, reject){
         for (var i in jszip.files) {
             var file = jszip.files[i];
@@ -171,62 +183,107 @@ songParser.then(function(jszip){
             var title = `${filejson.songName} - ${filejson.songSubName} (by ${filejson.authorName})`;
             setTitle(title);
             infoMetaData = filejson;
-            var selectedDifficulty;
-            if (songDifficulty) {
-                selectedDifficulty = filejson.difficultyLevels.find(function(difficulty){
-                    return difficulty.difficulty.toLowerCase() === songDifficulty.toLowerCase();
-                })
-            } else {
-                selectedDifficulty = filejson.difficultyLevels[filejson.difficultyLevels.length-1];
-                songDifficulty = selectedDifficulty.difficulty;
-            }
-            if (!selectedDifficulty) {
-                throw new Error("Could not find difficulty " + songDifficulty + "!");                
-            }
-            var trackjsonfilename = selectedDifficulty.jsonPath;
-            var audiofilename = selectedDifficulty.audioPath;
-            console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
-            var getTrackDetails = getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
-                return trackjsonfile.async('text').then(function(filedetails){
-                    var trackjson = JSON.parse(filedetails);
-                    songMetaData = trackjson;
-                    displayTrack(trackjson);
-                    return trackjson;
-                });
-            }).catch(showError);
-            var getAudio = getFileInZip(jszip, audiofilename).then(function(audiofile){
-                return audiofile.async('base64').then(function(b64data){
-                    var audioElem = document.createElement('audio');
-                    audioElem.setAttribute('id', 'audio');
-                    var format = audiofilename.toLowerCase().endsWith('mp3') ? 'mp3' : 'ogg';
-                    audioElem.setAttribute('src', `data:audio/${format};base64,${b64data}`);
-                    audioElem.onplay = function() {
-                        playing = true;
-                    };
-                    audioElem.onpause = function() {
-                        playing = false;
-                    };
-                    document.body.appendChild(audioElem);
-                    return audioElem;
-                }).catch(showError);
-            });
-            return Promise.all([getTrackDetails, getAudio]).then(function(results){
-                return {
-                    track_info: filejson,
-                    track_data: results[0],
-                    audioElement: results[1],
-                    zip: jszip
-                }
-            });
+            return {
+                filejson: filejson,
+                jszip: jszip
+            };
         });
     })
+}).then(function(data){
+    var selectedDifficulty;
+    return new Promise(function(resolve, reject) {
+        var songDifficulty = undefined;
+        if (parsedURL.query.difficulty) {
+            songDifficulty = parsedURL.query.difficulty;
+        }
+
+        if (songDifficulty) {
+            // use difficulty provided by query string parameter
+            selectedDifficulty = data.filejson.difficultyLevels.find(function(difficulty){
+                return difficulty.difficulty.toLowerCase() === songDifficulty.toLowerCase();
+            });
+            if (selectedDifficulty) {
+                data.selectedDifficulty = selectedDifficulty;
+                resolve(data);
+            } else {
+                reject(new Error("Could not find difficulty " + songDifficulty + "!"));
+            }
+        } else {
+            // show UI
+            setStage('selectDifficulty');
+            var sd = document.getElementById('select_difficulty');
+            data.filejson.difficultyLevels.forEach(function(difficulty, i) {
+                var elem = document.createElement('a-entity');
+                var text = document.createElement('a-entity');
+                elem.setAttribute('gaze-tracker', '');
+                elem.setAttribute('class', 'interactable');
+                elem.appendChild(text);
+                text.setAttribute('text', 'color', '#fff');
+                text.setAttribute('text', 'align', 'center');
+                var title = new DOMParser().parseFromString(difficulty.difficulty, 'text/html').documentElement.textContent;
+                text.setAttribute('text', 'value', title);
+                text.setAttribute('text', 'opacity', '1');
+                text.setAttribute('text', 'lineHeight', '40');
+                elem.setAttribute('position', {x: 0, y: 0.5 + i * 0.1, z: 0.0});
+                elem.setAttribute('geometry', {primitive: 'plane', width: 1.0, height: 0.09})
+                elem.setAttribute('material', {opacity: 0.5})
+                elem.addEventListener('select', function(){
+                    data.selectedDifficulty = difficulty;
+                    setStage('none');
+                    resolve(data);
+                });
+                sd.appendChild(elem);
+            });
+        }
+    });
+}).then(function(data){
+    var selectedDifficulty = data.selectedDifficulty;
+    var jszip = data.jszip;
+    var filejson = data.filejson;
+
+    var trackjsonfilename = selectedDifficulty.jsonPath;
+    var audiofilename = selectedDifficulty.audioPath;
+    console.log("Loading... " + trackjsonfilename + ' // ' + audiofilename);
+    var getTrackDetails = getFileInZip(jszip, trackjsonfilename).then(function(trackjsonfile){
+        return trackjsonfile.async('text').then(function(filedetails){
+            var trackjson = JSON.parse(filedetails);
+            songMetaData = trackjson;
+            displayTrack(trackjson);
+            return trackjson;
+        });
+    }).catch(showError);
+    var getAudio = getFileInZip(jszip, audiofilename).then(function(audiofile){
+        return audiofile.async('base64').then(function(b64data){
+            var audioElem = document.createElement('audio');
+            audioElem.setAttribute('id', 'audio');
+            var format = audiofilename.toLowerCase().endsWith('mp3') ? 'mp3' : 'ogg';
+            audioElem.setAttribute('src', `data:audio/${format};base64,${b64data}`);
+            audioElem.onplay = function() {
+                playing = true;
+            };
+            audioElem.onpause = function() {
+                playing = false;
+            };
+            document.body.appendChild(audioElem);
+            return audioElem;
+        }).catch(showError);
+    });
+    return Promise.all([getTrackDetails, getAudio]).then(function(results){
+        return {
+            track_info: filejson,
+            track_data: results[0],
+            audioElement: results[1],
+            zip: jszip,
+            difficulty: selectedDifficulty
+        }
+    });
 }).then(function(data){
     console.log(data);
     data.audioElement.play();
     var analytics = trackAnalytics(data.track_info, data.track_data);
     var appdata = Object.assign({
         expandStats: true,
-        songDifficulty: songDifficulty
+        difficulty: data.difficulty
     }, analytics);
     var app = new Vue({
         el: '#stats',
