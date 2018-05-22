@@ -4,6 +4,7 @@ import FileSaver from 'file-saver';
 
 require('aframe');
 require('./shaders/skyGradient.js');
+var beatSaverAPI = require('./beatsaver_api.js');
 var trackVisualization = require('./track-visualization.js');
 var trackAnalytics = require('./track-analytics.js');
 
@@ -28,7 +29,13 @@ var getSongURL = function() {
     });
 };
 
-var songParser = getSongURL().then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
+var songParser = getSongURL().catch(function(e){
+    return new Promise(function(resolve, reject){
+        beatSaverAPI().then(function(data){
+            resolve(`https://beatsaver.com/dl.php?id=${data[0].id}`);
+        }).catch(function(e){reject(e)});
+    });
+}).then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
 
 var setTitle = function(title){
     document.getElementById('song_title').setAttribute('text', 'value', title.toString());
