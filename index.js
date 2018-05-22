@@ -4,7 +4,6 @@ import FileSaver from 'file-saver';
 
 require('aframe');
 require('super-hands');
-require('aframe-extras');
 require('./shaders/skyGradient.js');
 var beatSaverAPI = require('./beatsaver_api.js');
 var trackVisualization = require('./track-visualization.js');
