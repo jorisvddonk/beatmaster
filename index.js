@@ -3,6 +3,8 @@ import Vue from 'vue';
 import FileSaver from 'file-saver';
 
 require('aframe');
+require('super-hands');
+require('aframe-extras');
 require('./shaders/skyGradient.js');
 var beatSaverAPI = require('./beatsaver_api.js');
 var trackVisualization = require('./track-visualization.js');
@@ -32,27 +34,30 @@ var getSongURL = function() {
 var songParser = getSongURL().catch(function(e){
     return new Promise(function(resolve, reject){
         beatSaverAPI().then(function(data){
-            document.getElementById('song_title').setAttribute('visible', false);
+            var st = document.getElementById('song_title');
+            st.setAttribute('visible', false);
             var ss = document.getElementById('select_song');
             data.forEach(function(song, i) {
                 var elem = document.createElement('a-entity');
+                elem.setAttribute('gaze-tracker', '');
+                elem.setAttribute('class', 'interactable');
                 elem.setAttribute('text', 'color', '#fff');
                 elem.setAttribute('text', 'align', 'center');
-                var p = new DOMParser()
-                var title = p.parseFromString(song.beatname, 'text/html').documentElement.textContent;
+                var title = new DOMParser().parseFromString(song.beatname, 'text/html').documentElement.textContent;
                 elem.setAttribute('text', 'value', title);
                 elem.setAttribute('text', 'opacity', '1');
                 elem.setAttribute('text', 'lineHeight', '40');
                 elem.setAttribute('position', {x: 0, y: i * 0.1, z: 0.0});
                 elem.setAttribute('geometry', {primitive: 'plane', width: 1.0, height: 0.09})
                 elem.setAttribute('material', {opacity: 0.5})
+                elem.addEventListener('select', function(){
+                    resolve(`https://beatsaver.com/dl.php?id=${song.id}`);
+                    ss.setAttribute('visible', false);
+                    st.setAttribute('visible', true);
+                });
                 ss.appendChild(elem);
             });
-            
-            
             ss.setAttribute('visible', true);
-
-            //resolve(`https://beatsaver.com/dl.php?id=${data[0].id}`);
         }).catch(function(e){reject(e)});
     });
 }).then(fetch).then(function(x){return JSZip.loadAsync(x.blob())});
@@ -86,8 +91,10 @@ var OFFSET_Y = 1;
 var OFFSET_Z = -7;
 var RED = '#f00';
 var BLUE = '#00f';
+var COLORS = ['#fff', '#333'];
 var infoMetaData = undefined;
 var songMetaData = undefined;
+var lastFocusForController = new Map();
 
 var getPositionForNote = function(note) {
     var time = note._time * 4;
@@ -240,6 +247,48 @@ songParser.then(function(jszip){
     trackVisualization(data);
     document.getElementById('stats').style.display = ''; // show element
 }).catch(showError);
+
+var getController = function (evt) {
+    return 'TODO_SUPPORT_MULTIPLE_CONTROLLERS';
+}
+
+AFRAME.registerComponent('gaze-tracker', {
+    init: function () {
+        this.el.setAttribute('material', 'color', COLORS[1]);
+        this.el.addEventListener('mouseover', function (evt) {
+            var last = lastFocusForController.get(getController(evt));
+            if (last) {
+                last.setAttribute('material', 'color', COLORS[1]);
+            }
+            lastFocusForController.set(getController(evt), evt.target);
+            this.setAttribute('material', 'color', COLORS[0]);
+        });
+        this.el.addEventListener('mouseleave', function (evt) {
+            lastFocusForController.delete(getController(evt));
+            this.setAttribute('material', 'color', COLORS[1]);
+        });
+    }
+});
+
+AFRAME.registerComponent('vr-ctrl', {
+    init: function () {
+        var handle = function (controller) {
+            var tile = lastFocusForController.get(controller);
+            if (tile) {
+                var evt = new Event('select');
+                tile.dispatchEvent(evt);
+            }
+        }
+        window.addEventListener('keydown', function (evt) { // handle spacebar
+            if (evt.keyCode === 32) {
+                handle('TODO_SUPPORT_MULTIPLE_CONTROLLERS');
+            }
+        })
+        this.el.addEventListener('triggerdown', function (evt) { // handle controller trigger down
+            handle('TODO_SUPPORT_MULTIPLE_CONTROLLERS');
+        });
+    }
+});
 
 
 /*
