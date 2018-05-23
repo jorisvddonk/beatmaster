@@ -133,15 +133,23 @@ var BOXROTATIONS = {
 }
 var displayTrack = function(trackdetails) {
     var noteElements = trackdetails._notes.map(note => {
-        var box = document.createElement('a-box');
-        box.setAttribute('position', getPositionForNote(note));
-        box.setAttribute('scale', `${BOXSIZE} ${BOXSIZE} ${BOXSIZE}`);
-        box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
-        if (note._cutDirection != 8) {
-            box.setAttribute('material', 'src', '#dir_0');
+        if (note._type == 0 || note._type == 1) {
+            var box = document.createElement('a-box');
+            box.setAttribute('position', getPositionForNote(note));
+            box.setAttribute('scale', `${BOXSIZE} ${BOXSIZE} ${BOXSIZE}`);
+            box.setAttribute('material', 'color', note._type == 0 ? RED : BLUE)
+            if (note._cutDirection != 8) {
+                box.setAttribute('material', 'src', '#dir_0');
+            }
+            box.setAttribute('rotation', '0 0 ' + BOXROTATIONS[note._cutDirection]);
+            return box;
+        } else if (note._type == 3) {
+            var sphere = document.createElement('a-sphere');
+            sphere.setAttribute('position', getPositionForNote(note));
+            sphere.setAttribute('radius', `${BOXSIZE*0.5}`);
+            sphere.setAttribute('material', 'color', '#444')
+            return sphere;
         }
-        box.setAttribute('rotation', '0 0 ' + BOXROTATIONS[note._cutDirection]);
-        return box;
     });
 
     noteElements.forEach(element => {
