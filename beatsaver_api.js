@@ -8,7 +8,7 @@ module.exports = function(mode, offset) {
     mode = 'top';
   }
   var parsedURL = url.parse(document.location.toString(), true);
-  var apiURL = `https://beatsaver.com/api.php?mode=${mode}&off=${offset}`;
+  var apiURL = `https://beatsaver.com/api/songs/${mode}/${offset}`;
   if (parsedURL.query.DEVELOP) { // if DEVELOP query string parameter is used, use a different URL to prevent sending traffic to beatsaver.com during development.
     apiURL = 'http://localhost:8081/data/example.json';
   }

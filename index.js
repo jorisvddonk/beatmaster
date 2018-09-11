@@ -51,7 +51,7 @@ var songParser = getSongURL().catch(function(e){
         beatSaverAPI().then(function(data){
             setStage('selectSong');
             var ss = document.getElementById('select_song');
-            data.forEach(function(song, i) {
+            data.songs.forEach(function(song, i) {
                 var elem = document.createElement('a-entity');
                 var text = document.createElement('a-entity');
                 elem.setAttribute('gaze-tracker', '');
@@ -59,7 +59,7 @@ var songParser = getSongURL().catch(function(e){
                 elem.appendChild(text);
                 text.setAttribute('text', 'color', '#fff');
                 text.setAttribute('text', 'align', 'center');
-                var title = new DOMParser().parseFromString(song.beatname, 'text/html').documentElement.textContent;
+                var title = new DOMParser().parseFromString(song.name, 'text/html').documentElement.textContent;
                 text.setAttribute('text', 'value', title);
                 text.setAttribute('text', 'opacity', '1');
                 text.setAttribute('text', 'lineHeight', '40');
@@ -67,7 +67,7 @@ var songParser = getSongURL().catch(function(e){
                 elem.setAttribute('geometry', {primitive: 'plane', width: 1.0, height: 0.09})
                 elem.setAttribute('material', {opacity: 0.5})
                 elem.addEventListener('select', function(){
-                    resolve(`https://beatsaver.com/dl.php?id=${song.id}`);
+                    resolve(song.downloadUrl);
                     setStage('none');
                 });
                 ss.appendChild(elem);
